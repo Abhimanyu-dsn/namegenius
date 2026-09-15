@@ -1,19 +1,32 @@
-import { Button } from "@/components/ui/button"
+import { Suspense } from "react"
+import { redirect } from "next/navigation"
 
-export default function Page() {
+import { LandingPage } from "@/components/namegenius/landing-page"
+import { BRIEF_PARAM_KEYS } from "@/lib/search-params"
+
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>
+}) {
+  const params = await searchParams
+  const hasBriefParams = BRIEF_PARAM_KEYS.some((key) => key in params && params[key])
+
+  if (hasBriefParams) {
+    const query = new URLSearchParams()
+    for (const key of BRIEF_PARAM_KEYS) {
+      const value = params[key]
+      if (typeof value === "string") {
+        query.set(key, value)
+      }
+    }
+    query.set("step", "1")
+    redirect(`/brief?${query.toString()}`)
+  }
+
   return (
-    <div className="flex min-h-svh p-6">
-      <div className="flex max-w-md min-w-0 flex-col gap-4 text-sm leading-loose">
-        <div>
-          <h1 className="font-medium">Project ready!</h1>
-          <p>You may now add components and start building.</p>
-          <p>We&apos;ve already added the button component for you.</p>
-          <Button className="mt-2">Button</Button>
-        </div>
-        <div className="font-mono text-xs text-muted-foreground">
-          (Press <kbd>d</kbd> to toggle dark mode)
-        </div>
-      </div>
-    </div>
+    <Suspense fallback={null}>
+      <LandingPage />
+    </Suspense>
   )
 }
