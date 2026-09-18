@@ -7,6 +7,7 @@ import {
   formatKeywordLine,
   formatTldStatusLabel,
   getCardDisplayDomain,
+  getTldStatusDotClass,
 } from "@/lib/results-display"
 import type { NameSuggestion } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -52,27 +53,24 @@ export function ShortlistCard({
 
       <div className="mt-6 flex items-start justify-between gap-4">
         <ul className="min-w-0 flex-1 space-y-2">
-          {suggestion.tldOptions.map((option) => {
-            const available = option.status === "available"
-            return (
-              <li
-                key={option.tld}
-                className="flex items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.1em] sm:text-xs"
-              >
-                <span>{option.tld}</span>
-                <span className="inline-flex items-center gap-2 text-landing-muted">
-                  <span
-                    className={cn(
-                      "size-2 rounded-full",
-                      available ? "bg-results-accent" : "bg-results-danger"
-                    )}
-                    aria-hidden
-                  />
-                  {formatTldStatusLabel(option)}
-                </span>
-              </li>
-            )
-          })}
+          {suggestion.tldOptions.map((option) => (
+            <li
+              key={option.tld}
+              className="flex items-center justify-between gap-3 font-mono text-[10px] uppercase tracking-[0.1em] sm:text-xs"
+            >
+              <span>{option.tld}</span>
+              <span className="inline-flex items-center gap-2 text-landing-muted">
+                <span
+                  className={cn(
+                    "size-2 rounded-full",
+                    getTldStatusDotClass(option.status)
+                  )}
+                  aria-hidden
+                />
+                {formatTldStatusLabel(option)}
+              </span>
+            </li>
+          ))}
         </ul>
         <BrandMatchRing score={suggestion.brandMatch} size="sm" />
       </div>

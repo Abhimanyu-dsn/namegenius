@@ -7,6 +7,7 @@ import {
   formatKeywordLine,
   formatTldStatusLabel,
   getCardDisplayDomain,
+  getTldStatusDotClass,
 } from "@/lib/results-display"
 import type { NameSuggestion, TldOption } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -119,27 +120,24 @@ export function ResultsDetailPanel({
           Domain availability
         </p>
         <ul className="space-y-2">
-          {tldOptions.map((option) => {
-            const available = option.status === "available"
-            return (
-              <li
-                key={option.tld}
-                className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.1em]"
-              >
-                <span>{option.tld}</span>
-                <span className="inline-flex items-center gap-2 text-landing-muted">
-                  <span
-                    className={cn(
-                      "size-2 rounded-full",
-                      available ? "bg-results-accent" : "bg-results-danger"
-                    )}
-                    aria-hidden
-                  />
-                  {formatTldStatusLabel(option)}
-                </span>
-              </li>
-            )
-          })}
+          {tldOptions.map((option) => (
+            <li
+              key={option.tld}
+              className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.1em]"
+            >
+              <span>{option.tld}</span>
+              <span className="inline-flex items-center gap-2 text-landing-muted">
+                <span
+                  className={cn(
+                    "size-2 rounded-full",
+                    getTldStatusDotClass(option.status)
+                  )}
+                  aria-hidden
+                />
+                {formatTldStatusLabel(option)}
+              </span>
+            </li>
+          ))}
         </ul>
       </div>
 

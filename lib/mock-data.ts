@@ -1,6 +1,6 @@
 import { applyBrandMatch, type BrandInputs } from "./brand-match"
 
-export type DomainStatus = "available" | "taken"
+export type DomainStatus = "available" | "taken" | "unavailable"
 
 export interface TldOption {
   tld: string
@@ -39,7 +39,7 @@ export const RESULTS_BATCH_SIZE = 5
 
 const TLD_LIST = SUPPORTED_TLDS
 
-function slugifyName(name: string) {
+export function slugifyName(name: string) {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, "")
 }
 

@@ -64,10 +64,12 @@ export function BriefShell({
     <div className={cn("flex min-h-svh flex-col bg-landing-bg text-landing-fg", className)}>
       <MarketingHeader />
 
-      <main className="flex flex-1 flex-col px-6 sm:px-8">
-        <div className="mx-auto w-full max-w-3xl flex-1">
-          <BriefProgress step={step} />
-          {children}
+      <main className="flex flex-1 flex-col items-center justify-center px-6 sm:px-8">
+        <div className="flex w-full max-w-3xl flex-1 flex-col items-center justify-center">
+          <div className="w-full self-stretch">
+            <BriefProgress step={step} />
+            {children}
+          </div>
         </div>
       </main>
 

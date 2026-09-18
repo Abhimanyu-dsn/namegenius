@@ -8,14 +8,12 @@ import { PanelRightOpen } from "lucide-react"
 import { useShortlist } from "@/hooks/use-shortlist"
 import {
   filterTldOptions,
-  generateSuggestions,
   type NameSuggestion,
 } from "@/lib/mock-data"
 import {
   buildHomeUrl,
   buildResultsUrl,
   parseResultsSearchParams,
-  toBrandInputs,
 } from "@/lib/search-params"
 import { cn } from "@/lib/utils"
 
@@ -33,6 +31,9 @@ export function ResultsPage() {
     [searchParams]
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [suggestions, setSuggestions] = useState<NameSuggestion[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(true)
   const { toggle, isSaved } = useShortlist()
@@ -49,14 +50,64 @@ export function ResultsPage() {
     }
   }, [parsed, router])
 
-  const brandInputs = parsed ? toBrandInputs(parsed) : null
-  const suggestions = parsed
-    ? generateSuggestions(brandInputs!, parsed.seed)
-    : []
+  useEffect(() => {
+    if (!parsed) return
+
+    let cancelled = false
+    setIsLoading(true)
+    setLoadError(null)
+
+    fetch("/api/suggestions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        concept: parsed.concept,
+        competitors: parsed.competitors,
+        description: parsed.description,
+        tlds: parsed.tlds,
+        seed: parsed.seed,
+      }),
+    })
+      .then(async (response) => {
+        const data = await response.json()
+        if (cancelled) return
+
+        if (!response.ok || data.error) {
+          setSuggestions([])
+          setLoadError(
+            typeof data.error === "string"
+              ? data.error
+              : "Something went wrong generating names. Try again."
+          )
+          return
+        }
+
+        setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : [])
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSuggestions([])
+          setLoadError("Something went wrong generating names. Try again.")
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false)
+          setIsRefreshing(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [parsed])
 
   const displaySuggestions: NameSuggestion[] = suggestions.map((suggestion) => ({
     ...suggestion,
-    tldOptions: filterTldOptions(suggestion.tldOptions, parsed?.tlds ?? "any"),
+    tldOptions: filterTldOptions(
+      suggestion.tldOptions,
+      parsed?.tlds ?? "any"
+    ),
   }))
 
   useEffect(() => {
@@ -90,18 +141,15 @@ export function ResultsPage() {
 
   function handleRefresh() {
     setIsRefreshing(true)
-    window.setTimeout(() => {
-      router.push(
-        buildResultsUrl({
-          concept: search.concept,
-          competitors: search.competitors,
-          description: search.description,
-          tlds: search.tlds,
-          seed: search.seed + 1,
-        })
-      )
-      setIsRefreshing(false)
-    }, 500)
+    router.push(
+      buildResultsUrl({
+        concept: search.concept,
+        competitors: search.competitors,
+        description: search.description,
+        tlds: search.tlds,
+        seed: search.seed + 1,
+      })
+    )
   }
 
   return (
@@ -134,6 +182,11 @@ export function ResultsPage() {
                 <br />
                 find the one that fits.
               </p>
+              {loadError ? (
+                <p className="mt-6 max-w-xs font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted sm:text-xs">
+                  {loadError}
+                </p>
+              ) : null}
               <Link
                 href={editSearchHref}
                 className="mt-6 inline-block font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
@@ -142,7 +195,9 @@ export function ResultsPage() {
               </Link>
             </div>
             <p className="mt-8 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted lg:block sm:text-xs">
-              {displaySuggestions.length} names generated
+              {isLoading
+                ? "Generating names..."
+                : `${displaySuggestions.length} names generated`}
               <br />
               based on your brief
             </p>
@@ -212,13 +267,15 @@ export function ResultsPage() {
         )}
 
         <p className="mx-auto mt-6 w-full max-w-7xl font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted lg:hidden sm:text-xs">
-          {displaySuggestions.length} names generated based on your brief
+          {isLoading
+            ? "Generating names..."
+            : `${displaySuggestions.length} names generated based on your brief`}
         </p>
       </div>
 
       <ResultsFooter
         onGenerateMore={handleRefresh}
-        isRefreshing={isRefreshing}
+        isRefreshing={isRefreshing || isLoading}
       />
     </ResultsShell>
   )

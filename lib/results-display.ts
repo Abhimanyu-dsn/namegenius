@@ -69,5 +69,13 @@ export function buildChecklist(
 }
 
 export function formatTldStatusLabel(option: TldOption): string {
-  return option.status === "available" ? "Available" : "Taken"
+  if (option.status === "available") return "Available"
+  if (option.status === "taken") return "Taken"
+  return "Unavailable"
+}
+
+export function getTldStatusDotClass(status: DomainStatus): string {
+  if (status === "available") return "bg-results-accent"
+  if (status === "taken") return "bg-results-danger"
+  return "bg-landing-muted/50"
 }
