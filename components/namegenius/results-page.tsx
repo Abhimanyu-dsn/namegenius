@@ -1,7 +1,6 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { PanelRightOpen } from "lucide-react"
 
@@ -11,7 +10,6 @@ import {
   type NameSuggestion,
 } from "@/lib/mock-data"
 import {
-  buildHomeUrl,
   buildResultsUrl,
   parseResultsSearchParams,
 } from "@/lib/search-params"
@@ -19,6 +17,7 @@ import { cn } from "@/lib/utils"
 
 import { MarketingHeader } from "./marketing-header"
 import { ResultsDetailPanel } from "./results-detail-panel"
+import { ResultsEditSearch } from "./results-edit-search"
 import { ResultsFooter } from "./results-footer"
 import { ResultsNameList } from "./results-name-list"
 import { ResultsShell } from "./results-shell"
@@ -36,6 +35,7 @@ export function ResultsPage() {
   const [suggestions, setSuggestions] = useState<NameSuggestion[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(true)
+  const [editOpen, setEditOpen] = useState(false)
   const { toggle, isSaved } = useShortlist()
 
   function getDefaultSelectedId(items: NameSuggestion[]) {
@@ -132,13 +132,6 @@ export function ResultsPage() {
   const selectedSuggestion =
     displaySuggestions.find((item) => item.id === activeSelectedId) ?? null
 
-  const editSearchHref = buildHomeUrl({
-    concept: search.concept,
-    competitors: search.competitors,
-    description: search.description,
-    tlds: search.tlds,
-  })
-
   function handleRefresh() {
     setIsRefreshing(true)
     router.push(
@@ -187,12 +180,29 @@ export function ResultsPage() {
                   {loadError}
                 </p>
               ) : null}
-              <Link
-                href={editSearchHref}
-                className="mt-6 inline-block font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
-              >
-                Edit search
-              </Link>
+              {editOpen ? (
+                <ResultsEditSearch
+                  initial={{
+                    concept: search.concept,
+                    description: search.description,
+                    competitors: search.competitors,
+                    tlds: search.tlds,
+                  }}
+                  onCancel={() => setEditOpen(false)}
+                  onSubmit={(next) => {
+                    setEditOpen(false)
+                    router.push(buildResultsUrl(next))
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="mt-6 inline-block font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
+                >
+                  Edit search
+                </button>
+              )}
             </div>
             <p className="mt-8 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted lg:block sm:text-xs">
               {isLoading
