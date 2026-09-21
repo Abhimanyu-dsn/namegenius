@@ -54,6 +54,13 @@ export async function POST(request: Request) {
     seed: Number.isFinite(seed) && seed >= 0 ? seed : 0,
   }
 
+  if (params.concept.trim().length === 0) {
+    return NextResponse.json(
+      { error: "Add your idea to get names.", code: "EMPTY_BRIEF" },
+      { status: 400 }
+    )
+  }
+
   const apiKey = process.env.GEMINI_API_KEY?.trim()
 
   if (!apiKey) {

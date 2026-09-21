@@ -21,6 +21,12 @@ import { ResultsEditSearch } from "./results-edit-search"
 import { ResultsFooter } from "./results-footer"
 import { ResultsNameList } from "./results-name-list"
 import { ResultsShell } from "./results-shell"
+import {
+  ResultsEmpty,
+  ResultsError,
+  ResultsLoading,
+  ResultsRateLimit,
+} from "./results-states"
 
 export function ResultsPage() {
   const router = useRouter()
@@ -32,6 +38,10 @@ export function ResultsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isLoading, setIsLoading] = useState(true)
   const [loadError, setLoadError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<
+    "QUOTA_EXHAUSTED" | "GENERATION_FAILED" | null
+  >(null)
+  const [retryKey, setRetryKey] = useState(0)
   const [suggestions, setSuggestions] = useState<NameSuggestion[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(true)
@@ -54,8 +64,16 @@ export function ResultsPage() {
     if (!parsed) return
 
     let cancelled = false
-    setIsLoading(true)
     setLoadError(null)
+    setErrorCode(null)
+
+    if (parsed.concept.trim().length === 0) {
+      setSuggestions([])
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
 
     fetch("/api/suggestions", {
       method: "POST",
@@ -69,11 +87,16 @@ export function ResultsPage() {
       }),
     })
       .then(async (response) => {
-        const data = await response.json()
+        const data = await response.json().catch(() => ({}))
         if (cancelled) return
 
         if (!response.ok || data.error) {
           setSuggestions([])
+          setErrorCode(
+            response.status === 429 || data.code === "QUOTA_EXHAUSTED"
+              ? "QUOTA_EXHAUSTED"
+              : "GENERATION_FAILED"
+          )
           setLoadError(
             typeof data.error === "string"
               ? data.error
@@ -87,6 +110,7 @@ export function ResultsPage() {
       .catch(() => {
         if (!cancelled) {
           setSuggestions([])
+          setErrorCode("GENERATION_FAILED")
           setLoadError("Something went wrong generating names. Try again.")
         }
       })
@@ -100,7 +124,7 @@ export function ResultsPage() {
     return () => {
       cancelled = true
     }
-  }, [parsed])
+  }, [parsed, retryKey])
 
   const displaySuggestions: NameSuggestion[] = suggestions.map((suggestion) => ({
     ...suggestion,
@@ -131,6 +155,9 @@ export function ResultsPage() {
 
   const selectedSuggestion =
     displaySuggestions.find((item) => item.id === activeSelectedId) ?? null
+
+  const hasResults =
+    !isLoading && !errorCode && displaySuggestions.length > 0
 
   function handleRefresh() {
     setIsRefreshing(true)
@@ -166,18 +193,31 @@ export function ResultsPage() {
               </p>
               <div className="mt-2 h-px w-12 bg-landing-fg/30" />
               <h1 className="mt-8 font-sans text-[clamp(1.75rem,4vw,2.75rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
-                Your names
-                <br />
-                are ready.
+                {hasResults ? (
+                  <>
+                    Your names
+                    <br />
+                    are ready.
+                  </>
+                ) : isLoading ? (
+                  <>
+                    Finding
+                    <br />
+                    your names.
+                  </>
+                ) : (
+                  <>
+                    No names
+                    <br />
+                    yet.
+                  </>
+                )}
               </h1>
-              <p className="mt-6 max-w-xs font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted sm:text-xs">
-                Scroll to explore
-                <br />
-                find the one that fits.
-              </p>
-              {loadError ? (
+              {hasResults ? (
                 <p className="mt-6 max-w-xs font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted sm:text-xs">
-                  {loadError}
+                  Scroll to explore
+                  <br />
+                  find the one that fits.
                 </p>
               ) : null}
               {editOpen ? (
@@ -204,13 +244,15 @@ export function ResultsPage() {
                 </button>
               )}
             </div>
-            <p className="mt-8 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted lg:block sm:text-xs">
-              {isLoading
-                ? "Generating names..."
-                : `${displaySuggestions.length} names generated`}
-              <br />
-              based on your brief
-            </p>
+            {isLoading || hasResults ? (
+              <p className="mt-8 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted lg:block sm:text-xs">
+                {isLoading
+                  ? "Generating names..."
+                  : `${displaySuggestions.length} names generated`}
+                <br />
+                based on your brief
+              </p>
+            ) : null}
           </section>
 
           <section className="relative min-w-0 md:col-span-1">
@@ -222,11 +264,31 @@ export function ResultsPage() {
                   : "md:grid-cols-1 lg:grid-cols-1"
               )}
             >
-              <ResultsNameList
-                suggestions={displaySuggestions}
-                selectedId={activeSelectedId}
-                onSelect={setSelectedId}
-              />
+              {isLoading ? (
+                <ResultsLoading />
+              ) : errorCode === "QUOTA_EXHAUSTED" ? (
+                <ResultsRateLimit />
+              ) : errorCode ? (
+                <ResultsError
+                  message={
+                    loadError ??
+                    "Something went wrong generating names. Try again."
+                  }
+                  onRetry={() => setRetryKey((key) => key + 1)}
+                />
+              ) : !hasResults ? (
+                <ResultsEmpty
+                  canRetry={search.concept.trim().length > 0}
+                  onRetry={() => setRetryKey((key) => key + 1)}
+                  onEdit={() => setEditOpen(true)}
+                />
+              ) : (
+                <ResultsNameList
+                  suggestions={displaySuggestions}
+                  selectedId={activeSelectedId}
+                  onSelect={setSelectedId}
+                />
+              )}
             </div>
 
             {!detailOpen ? (
@@ -241,7 +303,7 @@ export function ResultsPage() {
             ) : null}
           </section>
 
-          {detailOpen ? (
+          {detailOpen && hasResults ? (
             <section className="min-w-0">
               <ResultsDetailPanel
                 suggestion={selectedSuggestion}
@@ -259,7 +321,7 @@ export function ResultsPage() {
           ) : null}
         </div>
 
-        {!detailOpen && (
+        {!detailOpen && hasResults && (
           <div className="mx-auto mt-6 flex w-full max-w-7xl justify-center lg:hidden">
             <ResultsDetailPanel
               suggestion={selectedSuggestion}
@@ -276,16 +338,23 @@ export function ResultsPage() {
           </div>
         )}
 
-        <p className="mx-auto mt-6 w-full max-w-7xl font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted lg:hidden sm:text-xs">
-          {isLoading
-            ? "Generating names..."
-            : `${displaySuggestions.length} names generated based on your brief`}
-        </p>
+        {isLoading || hasResults ? (
+          <p className="mx-auto mt-6 w-full max-w-7xl font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted lg:hidden sm:text-xs">
+            {isLoading
+              ? "Generating names..."
+              : `${displaySuggestions.length} names generated based on your brief`}
+          </p>
+        ) : null}
       </div>
 
       <ResultsFooter
         onGenerateMore={handleRefresh}
-        isRefreshing={isRefreshing || isLoading}
+        isRefreshing={
+          isRefreshing ||
+          isLoading ||
+          errorCode === "QUOTA_EXHAUSTED" ||
+          search.concept.trim().length === 0
+        }
       />
     </ResultsShell>
   )
