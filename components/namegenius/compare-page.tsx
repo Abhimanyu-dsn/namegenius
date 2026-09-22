@@ -2,14 +2,13 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { ArrowRight, Download } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import { useCompare } from "@/hooks/use-compare"
 
 import { AIRecommendationPanel } from "./ai-recommendation-panel"
 import { CompareColumn } from "./compare-column"
 import { CompareDomainAvailability } from "./compare-domain-availability"
-import { CompareHeader } from "./compare-header"
 import { CompareNamingAnalysis } from "./compare-naming-analysis"
 import {
   COMPARE_SIDEBAR_TABS,
@@ -19,6 +18,7 @@ import {
 import { CompareStrengthsWeaknesses } from "./compare-strengths-weaknesses"
 import { CompareTable } from "./compare-table"
 import { CompareVsDivider } from "./compare-vs-divider"
+import { MarketingHeader } from "./marketing-header"
 import { ResultsShell } from "./results-shell"
 
 const MIN_TO_COMPARE = 2
@@ -32,12 +32,12 @@ export function ComparePage() {
 
   return (
     <ResultsShell>
-      <CompareHeader />
+      <MarketingHeader tagline="Names, side by side." />
 
       <main className="flex flex-1 flex-col px-6 pb-6 sm:px-8">
         <div className="mx-auto w-full max-w-7xl flex-1">
           <section>
-            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
+            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
               Compare
             </p>
             <div className="mt-2 h-px w-12 bg-landing-fg/30" />
@@ -59,25 +59,13 @@ export function ComparePage() {
               </div>
 
               {count > 0 ? (
-                <div className="flex items-center gap-4">
-                  {hasEnoughToCompare ? (
-                    <button
-                      type="button"
-                      onClick={() => {}}
-                      className="inline-flex items-center gap-2 rounded-full border border-landing-fg/40 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-landing-fg transition-colors hover:border-landing-fg hover:bg-landing-fg/10 sm:text-xs"
-                    >
-                      <Download className="size-3.5" strokeWidth={1.5} />
-                      Export as image
-                    </button>
-                  ) : null}
-                  <button
-                    type="button"
-                    onClick={clear}
-                    className="self-start font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
-                  >
-                    Clear all
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={clear}
+                  className="self-start font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
+                >
+                  Clear all
+                </button>
               ) : null}
             </div>
           </section>
@@ -88,21 +76,30 @@ export function ComparePage() {
 
               <div className="min-w-0 flex-1">
                 {activeTab === "Overview" ? (
-                  <div className="flex flex-col gap-8 xl:flex-row">
-                    <div className="grid flex-1 gap-6 sm:grid-cols-2">
-                      {items.map((suggestion, index) => (
-                        <div key={suggestion.id} className="relative">
-                          <CompareColumn
-                            suggestion={suggestion}
-                            index={index}
-                            onRemove={() => remove(suggestion.id)}
-                          />
-                          {index < items.length - 1 ? <CompareVsDivider /> : null}
-                        </div>
-                      ))}
+                  <div className="flex flex-col gap-10">
+                    <div>
+                      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
+                        Comparing {items.length} names
+                      </p>
+                      <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                        {items.map((suggestion, index) => (
+                          <div key={suggestion.id} className="relative">
+                            <CompareColumn
+                              suggestion={suggestion}
+                              index={index}
+                              onRemove={() => remove(suggestion.id)}
+                            />
+                            {index < items.length - 1 ? <CompareVsDivider /> : null}
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                    <div className="xl:w-80 xl:shrink-0">
-                      <AIRecommendationPanel items={items} />
+
+                    <div>
+                      <div className="h-px w-full bg-landing-fg/10" />
+                      <div className="mt-10">
+                        <AIRecommendationPanel items={items} />
+                      </div>
                     </div>
                   </div>
                 ) : activeTab === "Brand Fit" ? (

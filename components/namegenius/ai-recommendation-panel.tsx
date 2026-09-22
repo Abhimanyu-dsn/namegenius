@@ -31,73 +31,77 @@ export function AIRecommendationPanel({ items }: { items: NameSuggestion[] }) {
   const domainAvailable = display.status === "available"
 
   return (
-    <div className="w-full rounded-xl border border-landing-accent/40 p-5 sm:p-6">
+    <div className="w-full rounded-xl border-2 border-landing-accent bg-landing-accent/10 p-6 sm:p-8">
       <div className="flex items-center gap-2">
         <Sparkles className="size-4 text-landing-accent" strokeWidth={1.5} />
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-fg sm:text-xs">
           AI Recommendation
         </p>
-        <span className="rounded-full border border-landing-accent px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-landing-accent">
+        <span className="rounded-full bg-landing-accent px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-landing-accent-fg">
           Beta
         </span>
       </div>
 
-      <div className="mt-5 flex items-center gap-3">
-        <div
-          className={cn(
-            "flex size-10 shrink-0 items-center justify-center rounded-lg border font-sans text-base font-black uppercase",
-            getCompareAvatarClass(index)
-          )}
-        >
-          {recommended.name.charAt(0).toUpperCase()}
-        </div>
-        <div className="min-w-0">
-          <h3 className="truncate font-sans text-lg font-black uppercase tracking-tight">
-            {recommended.name}
-          </h3>
-          <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-landing-muted sm:text-xs">
-            Best overall choice
-          </p>
-        </div>
-        <span className="ml-auto shrink-0 font-sans text-xl font-black tabular-nums text-landing-accent">
-          {recommended.brandMatch}%
-        </span>
-      </div>
-
-      <p className="mt-4 font-mono text-[10px] uppercase leading-relaxed tracking-[0.1em] text-landing-muted sm:text-xs">
-        {recommended.name} has the strongest brand match score
-        {domainAvailable ? ` and an available ${display.tld} domain ` : " "}
-        among the names you&apos;re comparing.
-      </p>
-
-      <ul className="mt-5 space-y-2">
-        {checklist.map((item) => (
-          <li
-            key={item.label}
+      <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
+        <div className="flex items-center gap-4 lg:w-64 lg:shrink-0">
+          <div
             className={cn(
-              "flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.08em] sm:text-xs",
-              item.passed ? "text-landing-fg" : "text-landing-muted/50"
+              "flex size-14 shrink-0 items-center justify-center rounded-lg border font-sans text-xl font-black uppercase",
+              getCompareAvatarClass(index)
             )}
           >
-            <Check
-              className={cn(
-                "size-4 shrink-0",
-                item.passed ? "text-results-accent" : "text-landing-muted/30"
-              )}
-              strokeWidth={2}
-            />
-            {item.label}
-          </li>
-        ))}
-      </ul>
+            {recommended.name.charAt(0).toUpperCase()}
+          </div>
+          <div className="min-w-0">
+            <h3 className="truncate font-sans text-2xl font-black uppercase tracking-tight">
+              {recommended.name}
+            </h3>
+            <p className="font-mono text-[10px] uppercase tracking-[0.1em] text-landing-muted sm:text-xs">
+              Best overall choice
+            </p>
+            <p className="mt-1 font-sans text-2xl font-black tabular-nums text-landing-accent">
+              {recommended.brandMatch}%
+            </p>
+          </div>
+        </div>
 
-      <button
-        type="button"
-        onClick={() => toggle(recommended)}
-        className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-landing-cta-bg px-6 py-3 font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-landing-cta-fg transition-opacity hover:opacity-90 sm:text-xs"
-      >
-        {saved ? "Saved to shortlist" : "Keep in Shortlist"}
-      </button>
+        <div className="min-w-0 flex-1 lg:border-l lg:border-landing-accent/30 lg:pl-6">
+          <p className="font-mono text-[10px] uppercase leading-relaxed tracking-[0.1em] text-landing-muted sm:text-xs">
+            {recommended.name} has the strongest brand match score
+            {domainAvailable ? ` and an available ${display.tld} domain ` : " "}
+            among the names you&apos;re comparing.
+          </p>
+
+          <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+            {checklist.map((item) => (
+              <li
+                key={item.label}
+                className={cn(
+                  "flex items-center gap-3 font-mono text-[10px] uppercase tracking-[0.08em] sm:text-xs",
+                  item.passed ? "text-landing-fg" : "text-landing-muted/50"
+                )}
+              >
+                <Check
+                  className={cn(
+                    "size-4 shrink-0",
+                    item.passed ? "text-results-accent" : "text-landing-muted/30"
+                  )}
+                  strokeWidth={2}
+                />
+                {item.label}
+              </li>
+            ))}
+          </ul>
+
+          <button
+            type="button"
+            onClick={() => toggle(recommended)}
+            className="mt-6 inline-flex items-center justify-center gap-2 rounded-full bg-landing-cta-bg px-6 py-3 font-mono text-[10px] font-medium uppercase tracking-[0.15em] text-landing-cta-fg transition-opacity hover:opacity-90 sm:text-xs"
+          >
+            {saved ? "Saved to shortlist" : "Keep in Shortlist"}
+          </button>
+        </div>
+      </div>
     </div>
   )
 }
