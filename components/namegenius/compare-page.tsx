@@ -42,6 +42,12 @@ export function ComparePage() {
             </p>
             <div className="mt-2 h-px w-12 bg-landing-fg/30" />
 
+            {hasEnoughToCompare ? (
+              <div className="mt-8">
+                <AIRecommendationPanel items={items} />
+              </div>
+            ) : null}
+
             <div className="mt-8 flex flex-col gap-6 sm:flex-row sm:items-end sm:justify-between">
               <div>
                 <h1 className="font-sans text-[clamp(1.75rem,4vw,2.75rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
@@ -57,16 +63,6 @@ export function ComparePage() {
                       : "Add one more name to compare."}
                 </p>
               </div>
-
-              {count > 0 ? (
-                <button
-                  type="button"
-                  onClick={clear}
-                  className="self-start font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
-                >
-                  Clear all
-                </button>
-              ) : null}
             </div>
           </section>
 
@@ -76,30 +72,30 @@ export function ComparePage() {
 
               <div className="min-w-0 flex-1">
                 {activeTab === "Overview" ? (
-                  <div className="flex flex-col gap-10">
-                    <div>
+                  <div>
+                    <div className="flex items-center justify-between gap-4">
                       <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
                         Comparing {items.length} names
                       </p>
-                      <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-                        {items.map((suggestion, index) => (
-                          <div key={suggestion.id} className="relative">
-                            <CompareColumn
-                              suggestion={suggestion}
-                              index={index}
-                              onRemove={() => remove(suggestion.id)}
-                            />
-                            {index < items.length - 1 ? <CompareVsDivider /> : null}
-                          </div>
-                        ))}
-                      </div>
+                      <button
+                        type="button"
+                        onClick={clear}
+                        className="font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
+                      >
+                        Clear all
+                      </button>
                     </div>
-
-                    <div>
-                      <div className="h-px w-full bg-landing-fg/10" />
-                      <div className="mt-10">
-                        <AIRecommendationPanel items={items} />
-                      </div>
+                    <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
+                      {items.map((suggestion, index) => (
+                        <div key={suggestion.id} className="relative">
+                          <CompareColumn
+                            suggestion={suggestion}
+                            index={index}
+                            onRemove={() => remove(suggestion.id)}
+                          />
+                          {index < items.length - 1 ? <CompareVsDivider /> : null}
+                        </div>
+                      ))}
                     </div>
                   </div>
                 ) : activeTab === "Brand Fit" ? (
@@ -111,7 +107,9 @@ export function ComparePage() {
                 ) : activeTab === "Strengths & Weaknesses" ? (
                   <CompareStrengthsWeaknesses items={items} />
                 ) : (
-                  <AIRecommendationPanel items={items} />
+                  <p className="font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted sm:text-xs">
+                    See the AI Recommendation panel at the top of this page.
+                  </p>
                 )}
               </div>
             </div>
