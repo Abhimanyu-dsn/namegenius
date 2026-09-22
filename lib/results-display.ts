@@ -79,3 +79,13 @@ export function getTldStatusDotClass(status: DomainStatus): string {
   if (status === "taken") return "bg-results-danger"
   return "bg-landing-muted/50"
 }
+
+const COMPARE_AVATAR_CLASSES = [
+  "bg-compare-avatar-a/15 border-compare-avatar-a/50 text-compare-avatar-a",
+  "bg-compare-avatar-b/15 border-compare-avatar-b/50 text-compare-avatar-b",
+  "bg-compare-avatar-c/15 border-compare-avatar-c/50 text-compare-avatar-c",
+]
+
+export function getCompareAvatarClass(index: number): string {
+  return COMPARE_AVATAR_CLASSES[index % COMPARE_AVATAR_CLASSES.length]
+}

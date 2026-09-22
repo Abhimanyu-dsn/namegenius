@@ -1,12 +1,24 @@
 "use client"
 
 import Link from "next/link"
-import { ArrowRight } from "lucide-react"
+import { useState } from "react"
+import { ArrowRight, Download } from "lucide-react"
 
 import { useCompare } from "@/hooks/use-compare"
 
+import { AIRecommendationPanel } from "./ai-recommendation-panel"
 import { CompareColumn } from "./compare-column"
-import { MarketingHeader } from "./marketing-header"
+import { CompareDomainAvailability } from "./compare-domain-availability"
+import { CompareHeader } from "./compare-header"
+import { CompareNamingAnalysis } from "./compare-naming-analysis"
+import {
+  COMPARE_SIDEBAR_TABS,
+  CompareSidebar,
+  type CompareSidebarTab,
+} from "./compare-sidebar"
+import { CompareStrengthsWeaknesses } from "./compare-strengths-weaknesses"
+import { CompareTable } from "./compare-table"
+import { CompareVsDivider } from "./compare-vs-divider"
 import { ResultsShell } from "./results-shell"
 
 const MIN_TO_COMPARE = 2
@@ -14,15 +26,18 @@ const MIN_TO_COMPARE = 2
 export function ComparePage() {
   const { items, count, clear, remove } = useCompare()
   const hasEnoughToCompare = count >= MIN_TO_COMPARE
+  const [activeTab, setActiveTab] = useState<CompareSidebarTab>(
+    COMPARE_SIDEBAR_TABS[0]
+  )
 
   return (
     <ResultsShell>
-      <MarketingHeader tagline="Names, side by side." />
+      <CompareHeader />
 
       <main className="flex flex-1 flex-col px-6 pb-6 sm:px-8">
         <div className="mx-auto w-full max-w-7xl flex-1">
           <section>
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
+            <p className="mt-8 font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
               Compare
             </p>
             <div className="mt-2 h-px w-12 bg-landing-fg/30" />
@@ -44,26 +59,64 @@ export function ComparePage() {
               </div>
 
               {count > 0 ? (
-                <button
-                  type="button"
-                  onClick={clear}
-                  className="self-start font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
-                >
-                  Clear all
-                </button>
+                <div className="flex items-center gap-4">
+                  {hasEnoughToCompare ? (
+                    <button
+                      type="button"
+                      onClick={() => {}}
+                      className="inline-flex items-center gap-2 rounded-full border border-landing-fg/40 px-4 py-2 font-mono text-[10px] uppercase tracking-[0.12em] text-landing-fg transition-colors hover:border-landing-fg hover:bg-landing-fg/10 sm:text-xs"
+                    >
+                      <Download className="size-3.5" strokeWidth={1.5} />
+                      Export as image
+                    </button>
+                  ) : null}
+                  <button
+                    type="button"
+                    onClick={clear}
+                    className="self-start font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
+                  >
+                    Clear all
+                  </button>
+                </div>
               ) : null}
             </div>
           </section>
 
           {hasEnoughToCompare ? (
-            <div className="mt-12 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
-              {items.map((suggestion) => (
-                <CompareColumn
-                  key={suggestion.id}
-                  suggestion={suggestion}
-                  onRemove={() => remove(suggestion.id)}
-                />
-              ))}
+            <div className="mt-12 flex flex-col gap-8 lg:flex-row">
+              <CompareSidebar active={activeTab} onChange={setActiveTab} />
+
+              <div className="min-w-0 flex-1">
+                {activeTab === "Overview" ? (
+                  <div className="flex flex-col gap-8 xl:flex-row">
+                    <div className="grid flex-1 gap-6 sm:grid-cols-2">
+                      {items.map((suggestion, index) => (
+                        <div key={suggestion.id} className="relative">
+                          <CompareColumn
+                            suggestion={suggestion}
+                            index={index}
+                            onRemove={() => remove(suggestion.id)}
+                          />
+                          {index < items.length - 1 ? <CompareVsDivider /> : null}
+                        </div>
+                      ))}
+                    </div>
+                    <div className="xl:w-80 xl:shrink-0">
+                      <AIRecommendationPanel items={items} />
+                    </div>
+                  </div>
+                ) : activeTab === "Brand Fit" ? (
+                  <CompareTable items={items} />
+                ) : activeTab === "Domain Availability" ? (
+                  <CompareDomainAvailability items={items} />
+                ) : activeTab === "Naming Analysis" ? (
+                  <CompareNamingAnalysis items={items} />
+                ) : activeTab === "Strengths & Weaknesses" ? (
+                  <CompareStrengthsWeaknesses items={items} />
+                ) : (
+                  <AIRecommendationPanel items={items} />
+                )}
+              </div>
             </div>
           ) : (
             <div className="mt-16 flex flex-col items-start gap-8 rounded-xl border border-landing-fg/20 px-6 py-12 sm:px-10 sm:py-16">
@@ -85,10 +138,11 @@ export function ComparePage() {
 
               {count === 1 ? (
                 <div className="flex flex-wrap gap-4">
-                  {items.map((suggestion) => (
+                  {items.map((suggestion, index) => (
                     <CompareColumn
                       key={suggestion.id}
                       suggestion={suggestion}
+                      index={index}
                       onRemove={() => remove(suggestion.id)}
                     />
                   ))}
