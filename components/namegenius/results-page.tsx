@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { PanelRightOpen } from "lucide-react"
 
+import { useCompare } from "@/hooks/use-compare"
 import { useShortlist } from "@/hooks/use-shortlist"
 import {
   filterTldOptions,
@@ -47,6 +48,11 @@ export function ResultsPage() {
   const [detailOpen, setDetailOpen] = useState(true)
   const [editOpen, setEditOpen] = useState(false)
   const { toggle, isSaved } = useShortlist()
+  const {
+    toggle: toggleCompare,
+    isComparing,
+    canAddMore: canAddToCompare,
+  } = useCompare()
 
   function getDefaultSelectedId(items: NameSuggestion[]) {
     if (items.length === 0) return null
@@ -316,6 +322,13 @@ export function ResultsPage() {
                 onToggleSave={() => {
                   if (selectedSuggestion) toggle(selectedSuggestion)
                 }}
+                isComparing={
+                  selectedSuggestion ? isComparing(selectedSuggestion.id) : false
+                }
+                onToggleCompare={() => {
+                  if (selectedSuggestion) toggleCompare(selectedSuggestion)
+                }}
+                canAddToCompare={canAddToCompare}
               />
             </section>
           ) : null}
@@ -334,6 +347,13 @@ export function ResultsPage() {
               onToggleSave={() => {
                 if (selectedSuggestion) toggle(selectedSuggestion)
               }}
+              isComparing={
+                selectedSuggestion ? isComparing(selectedSuggestion.id) : false
+              }
+              onToggleCompare={() => {
+                if (selectedSuggestion) toggleCompare(selectedSuggestion)
+              }}
+              canAddToCompare={canAddToCompare}
             />
           </div>
         )}

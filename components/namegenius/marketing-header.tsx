@@ -3,10 +3,12 @@
 import Link from "next/link"
 import { Menu } from "lucide-react"
 
+import { useCompare } from "@/hooks/use-compare"
 import { useShortlist } from "@/hooks/use-shortlist"
 
 export function MarketingHeader({ tagline }: { tagline?: string }) {
   const { count } = useShortlist()
+  const { count: compareCount } = useCompare()
 
   return (
     <header className="mb-8 flex items-center justify-between gap-4 px-6 pt-8 sm:mb-10 sm:px-8">
@@ -35,6 +37,19 @@ export function MarketingHeader({ tagline }: { tagline?: string }) {
             aria-label={`${count} saved names`}
           >
             {count}
+          </span>
+        </Link>
+
+        <Link
+          href="/compare"
+          className="flex items-center gap-2 font-mono text-xs uppercase tracking-[0.2em] text-landing-fg transition-opacity hover:opacity-80"
+        >
+          Compare
+          <span
+            className="inline-flex size-7 items-center justify-center rounded-full border border-landing-fg text-[11px] font-medium tabular-nums"
+            aria-label={`${compareCount} names in compare`}
+          >
+            {compareCount}
           </span>
         </Link>
 

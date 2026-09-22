@@ -21,6 +21,9 @@ export function ResultsDetailPanel({
   onToggle,
   isSaved,
   onToggleSave,
+  isComparing = false,
+  onToggleCompare,
+  canAddToCompare = true,
 }: {
   suggestion: NameSuggestion | null
   tldOptions: TldOption[]
@@ -28,6 +31,9 @@ export function ResultsDetailPanel({
   onToggle: () => void
   isSaved: boolean
   onToggleSave: () => void
+  isComparing?: boolean
+  onToggleCompare?: () => void
+  canAddToCompare?: boolean
 }) {
   if (!suggestion) {
     return null
@@ -148,6 +154,17 @@ export function ResultsDetailPanel({
       >
         {isSaved ? "Saved to shortlist" : "+ Shortlist"}
       </button>
+
+      {onToggleCompare ? (
+        <button
+          type="button"
+          onClick={onToggleCompare}
+          disabled={!isComparing && !canAddToCompare}
+          className="mt-3 w-full rounded-full border border-landing-fg/40 px-6 py-4 font-mono text-xs font-medium uppercase tracking-[0.15em] text-landing-fg transition-colors hover:border-landing-fg hover:bg-landing-fg/10 disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm"
+        >
+          {isComparing ? "Remove from compare" : "+ Compare"}
+        </button>
+      ) : null}
     </aside>
   )
 }
