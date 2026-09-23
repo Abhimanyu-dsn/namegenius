@@ -4,7 +4,6 @@ import {
   BarChart3,
   CaseSensitive,
   Globe,
-  Lightbulb,
   ListChecks,
   Star,
   type LucideIcon,
@@ -18,7 +17,6 @@ export const COMPARE_SIDEBAR_TABS = [
   "Domain Availability",
   "Naming Analysis",
   "Strengths & Weaknesses",
-  "Recommendation",
 ] as const
 export type CompareSidebarTab = (typeof COMPARE_SIDEBAR_TABS)[number]
 
@@ -28,7 +26,6 @@ const TAB_ICONS: Record<CompareSidebarTab, LucideIcon> = {
   "Domain Availability": Globe,
   "Naming Analysis": CaseSensitive,
   "Strengths & Weaknesses": ListChecks,
-  Recommendation: Lightbulb,
 }
 
 export function CompareSidebar({

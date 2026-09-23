@@ -54,7 +54,7 @@ export function BrandMatchRing({
         <span
           className={cn(
             "mt-0.5 font-mono uppercase leading-tight tracking-[0.1em] text-landing-muted",
-            size === "sm" ? "text-[7px] sm:text-[8px]" : "text-[8px] sm:text-[9px]"
+            "text-[11px]"
           )}
         >
           Brand

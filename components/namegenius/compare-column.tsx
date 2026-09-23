@@ -50,9 +50,9 @@ export function CompareColumn({
       </div>
 
       <div className="mt-5 min-w-0">
-        <h2 className="break-words font-sans text-[clamp(1.1rem,2.6vw,1.5rem)] font-black uppercase leading-tight tracking-tight">
-          {display.slug}
-          <span className="ml-1 font-mono text-sm font-normal text-landing-muted sm:text-base">
+        <h2 className="font-sans text-[clamp(1.1rem,2.6vw,1.5rem)] font-black uppercase leading-tight tracking-tight">
+          <span className="break-words">{display.slug}</span>
+          <span className="ml-1 whitespace-nowrap font-mono text-sm font-normal text-landing-muted sm:text-base">
             {display.tld}
           </span>
         </h2>

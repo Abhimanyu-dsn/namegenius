@@ -37,7 +37,7 @@ export function AIRecommendationPanel({ items }: { items: NameSuggestion[] }) {
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-fg sm:text-xs">
           AI Recommendation
         </p>
-        <span className="rounded-full bg-landing-accent px-2 py-0.5 font-mono text-[9px] uppercase tracking-[0.1em] text-landing-accent-fg">
+        <span className="rounded-full bg-landing-accent px-2 py-0.5 font-mono text-[11px] uppercase tracking-[0.1em] text-landing-accent-fg">
           Beta
         </span>
       </div>
@@ -84,7 +84,7 @@ export function AIRecommendationPanel({ items }: { items: NameSuggestion[] }) {
                 <Check
                   className={cn(
                     "size-4 shrink-0",
-                    item.passed ? "text-results-accent" : "text-landing-muted/30"
+                    item.passed ? "text-landing-accent" : "text-landing-muted/30"
                   )}
                   strokeWidth={2}
                 />

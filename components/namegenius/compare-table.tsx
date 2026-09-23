@@ -103,7 +103,7 @@ export function CompareTable({ items }: { items: NameSuggestion[] }) {
                   key={items[index].id}
                   className={cn(
                     "border-b border-landing-fg/10 p-4 font-mono text-[10px] uppercase tracking-[0.1em] last:border-b-0 sm:text-xs",
-                    winners.has(index) ? "text-results-accent" : "text-landing-fg"
+                    winners.has(index) ? "text-landing-accent" : "text-landing-fg"
                   )}
                 >
                   {cell}

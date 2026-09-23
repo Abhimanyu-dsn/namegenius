@@ -73,10 +73,7 @@ export function ComparePage() {
               <div className="min-w-0 flex-1">
                 {activeTab === "Overview" ? (
                   <div>
-                    <div className="flex items-center justify-between gap-4">
-                      <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
-                        Comparing {items.length} names
-                      </p>
+                    <div className="flex justify-end">
                       <button
                         type="button"
                         onClick={clear}
@@ -104,12 +101,8 @@ export function ComparePage() {
                   <CompareDomainAvailability items={items} />
                 ) : activeTab === "Naming Analysis" ? (
                   <CompareNamingAnalysis items={items} />
-                ) : activeTab === "Strengths & Weaknesses" ? (
-                  <CompareStrengthsWeaknesses items={items} />
                 ) : (
-                  <p className="font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted sm:text-xs">
-                    See the AI Recommendation panel at the top of this page.
-                  </p>
+                  <CompareStrengthsWeaknesses items={items} />
                 )}
               </div>
             </div>
