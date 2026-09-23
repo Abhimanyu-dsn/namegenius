@@ -42,7 +42,10 @@ export function CompareTable({ items }: { items: NameSuggestion[] }) {
       cells: items.map(
         (item) => getDomainAvailabilityFraction(item.tldOptions).label
       ),
-      ranks: items.map((item) => getDomainAvailabilityFraction(item.tldOptions).available),
+      ranks: items.map((item) => {
+        const { available, total } = getDomainAvailabilityFraction(item.tldOptions)
+        return total > 0 ? available / total : 0
+      }),
     },
     {
       label: "Name length",

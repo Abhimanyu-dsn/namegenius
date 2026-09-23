@@ -88,8 +88,8 @@ export function ResultsDetailPanel({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="font-sans text-[clamp(1.5rem,4vw,2.25rem)] font-black uppercase leading-none tracking-tight">
-            {display.slug}
-            <span className="ml-2 font-mono text-base font-normal text-landing-muted sm:text-lg">
+            <span className="break-words">{display.slug}</span>
+            <span className="ml-2 whitespace-nowrap font-mono text-base font-normal text-landing-muted sm:text-lg">
               {display.tld}
             </span>
           </h2>

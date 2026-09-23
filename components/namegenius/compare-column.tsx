@@ -27,7 +27,7 @@ export function CompareColumn({
   const initial = suggestion.name.charAt(0).toUpperCase()
 
   return (
-    <article className="relative flex h-full min-w-[240px] flex-col rounded-xl border border-landing-fg/25 p-5 sm:p-6">
+    <article className="relative flex h-full min-w-0 flex-col rounded-xl border border-landing-fg/25 p-5 sm:p-6">
       <button
         type="button"
         onClick={onRemove}

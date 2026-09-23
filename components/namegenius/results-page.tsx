@@ -186,10 +186,11 @@ export function ResultsPage() {
         <div
           className={cn(
             "mx-auto grid w-full max-w-7xl flex-1 gap-8 md:gap-10",
-            detailOpen
+            detailOpen && hasResults
               ? "lg:grid-cols-[minmax(180px,1fr)_minmax(260px,1.15fr)_minmax(300px,1.35fr)]"
               : "lg:grid-cols-[minmax(180px,1fr)_1fr]",
-            !detailOpen && "md:grid-cols-1 lg:grid-cols-[minmax(180px,1fr)_1fr]"
+            !(detailOpen && hasResults) &&
+              "md:grid-cols-1 lg:grid-cols-[minmax(180px,1fr)_1fr]"
           )}
         >
           <section className="flex flex-col justify-between lg:min-h-[min(60vh,520px)]">

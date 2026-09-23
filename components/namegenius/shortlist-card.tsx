@@ -23,7 +23,7 @@ export function ShortlistCard({
 
   return (
     <article
-      className="flex h-full flex-col rounded-xl border border-landing-fg/25 p-5 sm:p-6"
+      className="flex h-full min-w-0 flex-col rounded-xl border border-landing-fg/25 p-5 sm:p-6"
     >
       <div className="mb-5 flex items-start justify-between gap-3">
         <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
@@ -41,8 +41,8 @@ export function ShortlistCard({
 
       <div className="min-w-0">
         <h2 className="font-sans text-[clamp(1.25rem,3vw,1.75rem)] font-black uppercase leading-none tracking-tight">
-          {display.slug}
-          <span className="ml-2 font-mono text-sm font-normal text-landing-muted sm:text-base">
+          <span className="break-words">{display.slug}</span>
+          <span className="ml-2 whitespace-nowrap font-mono text-sm font-normal text-landing-muted sm:text-base">
             {display.tld}
           </span>
         </h2>

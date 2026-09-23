@@ -66,7 +66,7 @@ export function AIRecommendationPanel({ items }: { items: NameSuggestion[] }) {
         </div>
 
         <div className="min-w-0 flex-1 lg:border-l lg:border-landing-accent/30 lg:pl-6">
-          <p className="font-mono text-[10px] uppercase leading-relaxed tracking-[0.1em] text-landing-muted sm:text-xs">
+          <p className="break-words font-mono text-[10px] uppercase leading-relaxed tracking-[0.1em] text-landing-muted sm:text-xs">
             {recommended.name} has the strongest brand match score
             {domainAvailable ? ` and an available ${display.tld} domain ` : " "}
             among the names you&apos;re comparing.

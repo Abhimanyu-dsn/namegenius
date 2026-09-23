@@ -84,7 +84,7 @@ export function ComparePage() {
                     </div>
                     <div className="mt-4 grid gap-6 sm:grid-cols-2 xl:grid-cols-4">
                       {items.map((suggestion, index) => (
-                        <div key={suggestion.id} className="relative">
+                        <div key={suggestion.id} className="relative min-w-0">
                           <CompareColumn
                             suggestion={suggestion}
                             index={index}
