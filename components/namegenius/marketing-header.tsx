@@ -2,13 +2,11 @@
 
 import Link from "next/link"
 import { useState } from "react"
-import { History, Menu, X } from "lucide-react"
+import { Menu, X } from "lucide-react"
 
 import { useCompare } from "@/hooks/use-compare"
 import { useRecentSearches } from "@/hooks/use-recent-searches"
 import { useShortlist } from "@/hooks/use-shortlist"
-
-import { RecentSearchCard } from "./recent-search-card"
 
 function NavLink({
   href,
@@ -38,63 +36,11 @@ function NavLink({
   )
 }
 
-function RecentSearchesList({
-  onNavigate,
-}: {
-  onNavigate?: () => void
-}) {
-  const { items, remove, add, clear } = useRecentSearches()
-
-  if (items.length === 0) {
-    return (
-      <p className="font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted sm:text-xs">
-        No recent searches yet.
-      </p>
-    )
-  }
-
-  return (
-    <div>
-      <div className="mb-3 flex items-center justify-between gap-3">
-        <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
-          Recent searches
-        </p>
-        <button
-          type="button"
-          onClick={clear}
-          className="font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
-        >
-          Clear all
-        </button>
-      </div>
-      <div className="flex max-h-80 flex-col gap-3 overflow-y-auto">
-        {items.map((item) => (
-          <RecentSearchCard
-            key={item.id}
-            item={item}
-            onRun={() => {
-              add({
-                concept: item.concept,
-                competitors: item.competitors,
-                description: item.description,
-                tlds: item.tlds,
-              })
-              onNavigate?.()
-            }}
-            onRemove={() => remove(item.id)}
-          />
-        ))}
-      </div>
-    </div>
-  )
-}
-
 export function MarketingHeader({ tagline }: { tagline?: string }) {
   const { count } = useShortlist()
   const { count: compareCount } = useCompare()
   const { count: recentCount } = useRecentSearches()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [recentOpen, setRecentOpen] = useState(false)
 
   return (
     <header className="relative mb-8 flex items-center justify-between gap-4 px-6 pt-8 sm:mb-10 sm:px-8">
@@ -116,32 +62,11 @@ export function MarketingHeader({ tagline }: { tagline?: string }) {
         <div className="hidden items-center gap-4 sm:flex sm:gap-6">
           <NavLink href="/shortlist" label="Shortlist" count={count} />
           <NavLink href="/compare" label="Compare" count={compareCount} />
-
-          <div className="relative">
-            <button
-              type="button"
-              aria-label="Recent searches"
-              aria-expanded={recentOpen}
-              onClick={() => setRecentOpen((open) => !open)}
-              className="relative text-landing-fg transition-opacity hover:opacity-80"
-            >
-              <History className="size-5" strokeWidth={1.5} />
-              {recentCount > 0 ? (
-                <span
-                  aria-hidden
-                  className="absolute -right-1.5 -top-1.5 inline-flex size-4 items-center justify-center rounded-full border border-landing-fg bg-landing-bg text-[9px] font-medium tabular-nums"
-                >
-                  {recentCount}
-                </span>
-              ) : null}
-            </button>
-
-            {recentOpen ? (
-              <div className="absolute right-0 top-full z-20 mt-3 w-[360px] rounded-xl border border-landing-fg/25 bg-landing-bg p-5">
-                <RecentSearchesList onNavigate={() => setRecentOpen(false)} />
-              </div>
-            ) : null}
-          </div>
+          <NavLink
+            href="/recent-searches"
+            label="Recent Searches"
+            count={recentCount}
+          />
         </div>
 
         <button
@@ -173,8 +98,12 @@ export function MarketingHeader({ tagline }: { tagline?: string }) {
             count={compareCount}
             onClick={() => setMenuOpen(false)}
           />
-          <div className="h-px w-full bg-landing-fg/10" />
-          <RecentSearchesList onNavigate={() => setMenuOpen(false)} />
+          <NavLink
+            href="/recent-searches"
+            label="Recent Searches"
+            count={recentCount}
+            onClick={() => setMenuOpen(false)}
+          />
         </div>
       ) : null}
     </header>

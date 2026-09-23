@@ -3,16 +3,12 @@
 import Link from "next/link"
 import { ArrowRight } from "lucide-react"
 
-import { useRecentSearches } from "@/hooks/use-recent-searches"
 import { cn } from "@/lib/utils"
 
 import { LandingDomainShowcase } from "./landing-domain-showcase"
 import { MarketingHeader } from "./marketing-header"
-import { RecentSearchCard } from "./recent-search-card"
 
 export function LandingPage() {
-  const { items: recentSearches, remove, add } = useRecentSearches()
-
   return (
     <div
       className={cn(
@@ -20,34 +16,6 @@ export function LandingPage() {
       )}
     >
       <MarketingHeader />
-
-      {recentSearches.length > 0 ? (
-        <div className="px-6 pt-6 sm:px-8">
-          <div className="mx-auto w-full max-w-7xl">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-landing-muted sm:text-xs">
-              Recent searches
-            </p>
-            <div className="mt-3 flex gap-4 overflow-x-auto pb-2">
-              {recentSearches.map((item) => (
-                <RecentSearchCard
-                  key={item.id}
-                  item={item}
-                  className="w-[280px] sm:w-[320px]"
-                  onRun={() =>
-                    add({
-                      concept: item.concept,
-                      competitors: item.competitors,
-                      description: item.description,
-                      tlds: item.tlds,
-                    })
-                  }
-                  onRemove={() => remove(item.id)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      ) : null}
 
       <main
         className={cn(
@@ -73,6 +41,13 @@ export function LandingPage() {
             >
               Start your brief
               <ArrowRight className="size-4" strokeWidth={2} />
+            </Link>
+
+            <Link
+              href="/recent-searches"
+              className="mt-6 self-start font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
+            >
+              Recent searches
             </Link>
           </div>
 
