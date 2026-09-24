@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
+import { useRecentSearches } from "@/hooks/use-recent-searches"
 import {
   buildResultsUrl,
   parseTldPreference,
@@ -107,6 +108,7 @@ export function BriefPage() {
   const [category, setCategory] = useState<NamingCategory>("Product")
   const [tldPreference, setTldPreference] = useState<TldPreference>([".com"])
   const [showMoreTlds, setShowMoreTlds] = useState(false)
+  const { add: addRecentSearch } = useRecentSearches()
 
   useEffect(() => {
     setConcept(urlSearchParams.get("concept") ?? "")
@@ -133,6 +135,12 @@ export function BriefPage() {
   }
 
   function handleFindNames() {
+    addRecentSearch({
+      concept,
+      competitors,
+      description,
+      tlds: tldPreference,
+    })
     router.push(
       buildResultsUrl({
         concept,

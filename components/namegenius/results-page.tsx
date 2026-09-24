@@ -1,29 +1,33 @@
 "use client"
 
 import { useEffect, useMemo, useState } from "react"
-import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { PanelRightOpen } from "lucide-react"
 
+import { useCompare } from "@/hooks/use-compare"
 import { useShortlist } from "@/hooks/use-shortlist"
 import {
   filterTldOptions,
-  generateSuggestions,
   type NameSuggestion,
 } from "@/lib/mock-data"
 import {
-  buildHomeUrl,
   buildResultsUrl,
   parseResultsSearchParams,
-  toBrandInputs,
 } from "@/lib/search-params"
 import { cn } from "@/lib/utils"
 
 import { MarketingHeader } from "./marketing-header"
 import { ResultsDetailPanel } from "./results-detail-panel"
+import { ResultsEditSearch } from "./results-edit-search"
 import { ResultsFooter } from "./results-footer"
 import { ResultsNameList } from "./results-name-list"
 import { ResultsShell } from "./results-shell"
+import {
+  ResultsEmpty,
+  ResultsError,
+  ResultsLoading,
+  ResultsRateLimit,
+} from "./results-states"
 
 export function ResultsPage() {
   const router = useRouter()
@@ -33,9 +37,22 @@ export function ResultsPage() {
     [searchParams]
   )
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
+  const [errorCode, setErrorCode] = useState<
+    "QUOTA_EXHAUSTED" | "GENERATION_FAILED" | null
+  >(null)
+  const [retryKey, setRetryKey] = useState(0)
+  const [suggestions, setSuggestions] = useState<NameSuggestion[]>([])
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [detailOpen, setDetailOpen] = useState(true)
+  const [editOpen, setEditOpen] = useState(false)
   const { toggle, isSaved } = useShortlist()
+  const {
+    toggle: toggleCompare,
+    isComparing,
+    canAddMore: canAddToCompare,
+  } = useCompare()
 
   function getDefaultSelectedId(items: NameSuggestion[]) {
     if (items.length === 0) return null
@@ -49,14 +66,78 @@ export function ResultsPage() {
     }
   }, [parsed, router])
 
-  const brandInputs = parsed ? toBrandInputs(parsed) : null
-  const suggestions = parsed
-    ? generateSuggestions(brandInputs!, parsed.seed)
-    : []
+  useEffect(() => {
+    if (!parsed) return
+
+    let cancelled = false
+    setLoadError(null)
+    setErrorCode(null)
+
+    if (parsed.concept.trim().length === 0) {
+      setSuggestions([])
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+
+    fetch("/api/suggestions", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        concept: parsed.concept,
+        competitors: parsed.competitors,
+        description: parsed.description,
+        tlds: parsed.tlds,
+        seed: parsed.seed,
+      }),
+    })
+      .then(async (response) => {
+        const data = await response.json().catch(() => ({}))
+        if (cancelled) return
+
+        if (!response.ok || data.error) {
+          setSuggestions([])
+          setErrorCode(
+            response.status === 429 || data.code === "QUOTA_EXHAUSTED"
+              ? "QUOTA_EXHAUSTED"
+              : "GENERATION_FAILED"
+          )
+          setLoadError(
+            typeof data.error === "string"
+              ? data.error
+              : "Something went wrong generating names. Try again."
+          )
+          return
+        }
+
+        setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : [])
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setSuggestions([])
+          setErrorCode("GENERATION_FAILED")
+          setLoadError("Something went wrong generating names. Try again.")
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoading(false)
+          setIsRefreshing(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [parsed, retryKey])
 
   const displaySuggestions: NameSuggestion[] = suggestions.map((suggestion) => ({
     ...suggestion,
-    tldOptions: filterTldOptions(suggestion.tldOptions, parsed?.tlds ?? "any"),
+    tldOptions: filterTldOptions(
+      suggestion.tldOptions,
+      parsed?.tlds ?? "any"
+    ),
   }))
 
   useEffect(() => {
@@ -81,27 +162,20 @@ export function ResultsPage() {
   const selectedSuggestion =
     displaySuggestions.find((item) => item.id === activeSelectedId) ?? null
 
-  const editSearchHref = buildHomeUrl({
-    concept: search.concept,
-    competitors: search.competitors,
-    description: search.description,
-    tlds: search.tlds,
-  })
+  const hasResults =
+    !isLoading && !errorCode && displaySuggestions.length > 0
 
   function handleRefresh() {
     setIsRefreshing(true)
-    window.setTimeout(() => {
-      router.push(
-        buildResultsUrl({
-          concept: search.concept,
-          competitors: search.competitors,
-          description: search.description,
-          tlds: search.tlds,
-          seed: search.seed + 1,
-        })
-      )
-      setIsRefreshing(false)
-    }, 500)
+    router.push(
+      buildResultsUrl({
+        concept: search.concept,
+        competitors: search.competitors,
+        description: search.description,
+        tlds: search.tlds,
+        seed: search.seed + 1,
+      })
+    )
   }
 
   return (
@@ -112,10 +186,11 @@ export function ResultsPage() {
         <div
           className={cn(
             "mx-auto grid w-full max-w-7xl flex-1 gap-8 md:gap-10",
-            detailOpen
+            detailOpen && hasResults
               ? "lg:grid-cols-[minmax(180px,1fr)_minmax(260px,1.15fr)_minmax(300px,1.35fr)]"
               : "lg:grid-cols-[minmax(180px,1fr)_1fr]",
-            !detailOpen && "md:grid-cols-1 lg:grid-cols-[minmax(180px,1fr)_1fr]"
+            !(detailOpen && hasResults) &&
+              "md:grid-cols-1 lg:grid-cols-[minmax(180px,1fr)_1fr]"
           )}
         >
           <section className="flex flex-col justify-between lg:min-h-[min(60vh,520px)]">
@@ -125,27 +200,66 @@ export function ResultsPage() {
               </p>
               <div className="mt-2 h-px w-12 bg-landing-fg/30" />
               <h1 className="mt-8 font-sans text-[clamp(1.75rem,4vw,2.75rem)] font-black uppercase leading-[0.95] tracking-[-0.03em]">
-                Your names
-                <br />
-                are ready.
+                {hasResults ? (
+                  <>
+                    Your names
+                    <br />
+                    are ready.
+                  </>
+                ) : isLoading ? (
+                  <>
+                    Finding
+                    <br />
+                    your names.
+                  </>
+                ) : (
+                  <>
+                    No names
+                    <br />
+                    yet.
+                  </>
+                )}
               </h1>
-              <p className="mt-6 max-w-xs font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted sm:text-xs">
-                Scroll to explore
-                <br />
-                find the one that fits.
-              </p>
-              <Link
-                href={editSearchHref}
-                className="mt-6 inline-block font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
-              >
-                Edit search
-              </Link>
+              {hasResults ? (
+                <p className="mt-6 max-w-xs font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted sm:text-xs">
+                  Scroll to explore
+                  <br />
+                  find the one that fits.
+                </p>
+              ) : null}
+              {editOpen ? (
+                <ResultsEditSearch
+                  initial={{
+                    concept: search.concept,
+                    description: search.description,
+                    competitors: search.competitors,
+                    tlds: search.tlds,
+                  }}
+                  onCancel={() => setEditOpen(false)}
+                  onSubmit={(next) => {
+                    setEditOpen(false)
+                    router.push(buildResultsUrl(next))
+                  }}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setEditOpen(true)}
+                  className="mt-6 inline-block font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
+                >
+                  Edit search
+                </button>
+              )}
             </div>
-            <p className="mt-8 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted lg:block sm:text-xs">
-              {displaySuggestions.length} names generated
-              <br />
-              based on your brief
-            </p>
+            {isLoading || hasResults ? (
+              <p className="mt-8 hidden font-mono text-[10px] uppercase leading-relaxed tracking-[0.12em] text-landing-muted lg:block sm:text-xs">
+                {isLoading
+                  ? "Generating names..."
+                  : `${displaySuggestions.length} names generated`}
+                <br />
+                based on your brief
+              </p>
+            ) : null}
           </section>
 
           <section className="relative min-w-0 md:col-span-1">
@@ -157,11 +271,31 @@ export function ResultsPage() {
                   : "md:grid-cols-1 lg:grid-cols-1"
               )}
             >
-              <ResultsNameList
-                suggestions={displaySuggestions}
-                selectedId={activeSelectedId}
-                onSelect={setSelectedId}
-              />
+              {isLoading ? (
+                <ResultsLoading />
+              ) : errorCode === "QUOTA_EXHAUSTED" ? (
+                <ResultsRateLimit />
+              ) : errorCode ? (
+                <ResultsError
+                  message={
+                    loadError ??
+                    "Something went wrong generating names. Try again."
+                  }
+                  onRetry={() => setRetryKey((key) => key + 1)}
+                />
+              ) : !hasResults ? (
+                <ResultsEmpty
+                  canRetry={search.concept.trim().length > 0}
+                  onRetry={() => setRetryKey((key) => key + 1)}
+                  onEdit={() => setEditOpen(true)}
+                />
+              ) : (
+                <ResultsNameList
+                  suggestions={displaySuggestions}
+                  selectedId={activeSelectedId}
+                  onSelect={setSelectedId}
+                />
+              )}
             </div>
 
             {!detailOpen ? (
@@ -176,7 +310,7 @@ export function ResultsPage() {
             ) : null}
           </section>
 
-          {detailOpen ? (
+          {detailOpen && hasResults ? (
             <section className="min-w-0">
               <ResultsDetailPanel
                 suggestion={selectedSuggestion}
@@ -189,12 +323,19 @@ export function ResultsPage() {
                 onToggleSave={() => {
                   if (selectedSuggestion) toggle(selectedSuggestion)
                 }}
+                isComparing={
+                  selectedSuggestion ? isComparing(selectedSuggestion.id) : false
+                }
+                onToggleCompare={() => {
+                  if (selectedSuggestion) toggleCompare(selectedSuggestion)
+                }}
+                canAddToCompare={canAddToCompare}
               />
             </section>
           ) : null}
         </div>
 
-        {!detailOpen && (
+        {!detailOpen && hasResults && (
           <div className="mx-auto mt-6 flex w-full max-w-7xl justify-center lg:hidden">
             <ResultsDetailPanel
               suggestion={selectedSuggestion}
@@ -207,18 +348,34 @@ export function ResultsPage() {
               onToggleSave={() => {
                 if (selectedSuggestion) toggle(selectedSuggestion)
               }}
+              isComparing={
+                selectedSuggestion ? isComparing(selectedSuggestion.id) : false
+              }
+              onToggleCompare={() => {
+                if (selectedSuggestion) toggleCompare(selectedSuggestion)
+              }}
+              canAddToCompare={canAddToCompare}
             />
           </div>
         )}
 
-        <p className="mx-auto mt-6 w-full max-w-7xl font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted lg:hidden sm:text-xs">
-          {displaySuggestions.length} names generated based on your brief
-        </p>
+        {isLoading || hasResults ? (
+          <p className="mx-auto mt-6 w-full max-w-7xl font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted lg:hidden sm:text-xs">
+            {isLoading
+              ? "Generating names..."
+              : `${displaySuggestions.length} names generated based on your brief`}
+          </p>
+        ) : null}
       </div>
 
       <ResultsFooter
         onGenerateMore={handleRefresh}
-        isRefreshing={isRefreshing}
+        isRefreshing={
+          isRefreshing ||
+          isLoading ||
+          errorCode === "QUOTA_EXHAUSTED" ||
+          search.concept.trim().length === 0
+        }
       />
     </ResultsShell>
   )

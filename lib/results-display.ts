@@ -69,5 +69,23 @@ export function buildChecklist(
 }
 
 export function formatTldStatusLabel(option: TldOption): string {
-  return option.status === "available" ? "Available" : "Taken"
+  if (option.status === "available") return "Available"
+  if (option.status === "taken") return "Taken"
+  return "Unavailable"
+}
+
+export function getTldStatusDotClass(status: DomainStatus): string {
+  if (status === "available") return "bg-results-accent"
+  if (status === "taken") return "bg-results-danger"
+  return "bg-landing-muted/50"
+}
+
+const COMPARE_AVATAR_CLASSES = [
+  "bg-compare-avatar-a/15 border-compare-avatar-a/50 text-compare-avatar-a",
+  "bg-compare-avatar-b/15 border-compare-avatar-b/50 text-compare-avatar-b",
+  "bg-compare-avatar-c/15 border-compare-avatar-c/50 text-compare-avatar-c",
+]
+
+export function getCompareAvatarClass(index: number): string {
+  return COMPARE_AVATAR_CLASSES[index % COMPARE_AVATAR_CLASSES.length]
 }

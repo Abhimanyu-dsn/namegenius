@@ -26,7 +26,16 @@ export function ResultsNameList({
   const scrollToId = useCallback((id: string, behavior: ScrollBehavior = "smooth") => {
     ignoreObserverRef.current = true
     const node = itemRefs.current.get(id)
-    node?.scrollIntoView({ behavior, block: "center" })
+    const root = scrollRef.current
+    if (node && root) {
+      const nodeRect = node.getBoundingClientRect()
+      const rootRect = root.getBoundingClientRect()
+      const top =
+        root.scrollTop +
+        (nodeRect.top - rootRect.top) -
+        (root.clientHeight - nodeRect.height) / 2
+      root.scrollTo({ top, behavior })
+    }
     window.setTimeout(() => {
       ignoreObserverRef.current = false
     }, 300)

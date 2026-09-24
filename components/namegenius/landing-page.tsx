@@ -42,6 +42,13 @@ export function LandingPage() {
               Start your brief
               <ArrowRight className="size-4" strokeWidth={2} />
             </Link>
+
+            <Link
+              href="/recent-searches"
+              className="mt-6 self-start font-mono text-[10px] uppercase tracking-[0.12em] text-landing-muted underline-offset-4 transition-colors hover:text-landing-fg hover:underline sm:text-xs"
+            >
+              Recent searches
+            </Link>
           </div>
 
           <div className="w-full min-w-0 lg:max-w-[520px] lg:flex-1">

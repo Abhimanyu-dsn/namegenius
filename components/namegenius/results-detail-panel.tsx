@@ -7,6 +7,7 @@ import {
   formatKeywordLine,
   formatTldStatusLabel,
   getCardDisplayDomain,
+  getTldStatusDotClass,
 } from "@/lib/results-display"
 import type { NameSuggestion, TldOption } from "@/lib/mock-data"
 import { cn } from "@/lib/utils"
@@ -20,6 +21,9 @@ export function ResultsDetailPanel({
   onToggle,
   isSaved,
   onToggleSave,
+  isComparing = false,
+  onToggleCompare,
+  canAddToCompare = true,
 }: {
   suggestion: NameSuggestion | null
   tldOptions: TldOption[]
@@ -27,6 +31,9 @@ export function ResultsDetailPanel({
   onToggle: () => void
   isSaved: boolean
   onToggleSave: () => void
+  isComparing?: boolean
+  onToggleCompare?: () => void
+  canAddToCompare?: boolean
 }) {
   if (!suggestion) {
     return null
@@ -81,8 +88,8 @@ export function ResultsDetailPanel({
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <h2 className="font-sans text-[clamp(1.5rem,4vw,2.25rem)] font-black uppercase leading-none tracking-tight">
-            {display.slug}
-            <span className="ml-2 font-mono text-base font-normal text-landing-muted sm:text-lg">
+            <span className="break-words">{display.slug}</span>
+            <span className="ml-2 whitespace-nowrap font-mono text-base font-normal text-landing-muted sm:text-lg">
               {display.tld}
             </span>
           </h2>
@@ -119,27 +126,24 @@ export function ResultsDetailPanel({
           Domain availability
         </p>
         <ul className="space-y-2">
-          {tldOptions.map((option) => {
-            const available = option.status === "available"
-            return (
-              <li
-                key={option.tld}
-                className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.1em]"
-              >
-                <span>{option.tld}</span>
-                <span className="inline-flex items-center gap-2 text-landing-muted">
-                  <span
-                    className={cn(
-                      "size-2 rounded-full",
-                      available ? "bg-results-accent" : "bg-results-danger"
-                    )}
-                    aria-hidden
-                  />
-                  {formatTldStatusLabel(option)}
-                </span>
-              </li>
-            )
-          })}
+          {tldOptions.map((option) => (
+            <li
+              key={option.tld}
+              className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.1em]"
+            >
+              <span>{option.tld}</span>
+              <span className="inline-flex items-center gap-2 text-landing-muted">
+                <span
+                  className={cn(
+                    "size-2 rounded-full",
+                    getTldStatusDotClass(option.status)
+                  )}
+                  aria-hidden
+                />
+                {formatTldStatusLabel(option)}
+              </span>
+            </li>
+          ))}
         </ul>
       </div>
 
@@ -150,6 +154,17 @@ export function ResultsDetailPanel({
       >
         {isSaved ? "Saved to shortlist" : "+ Shortlist"}
       </button>
+
+      {onToggleCompare ? (
+        <button
+          type="button"
+          onClick={onToggleCompare}
+          disabled={!isComparing && !canAddToCompare}
+          className="mt-3 w-full rounded-full border border-landing-fg/40 px-6 py-4 font-mono text-xs font-medium uppercase tracking-[0.15em] text-landing-fg transition-colors hover:border-landing-fg hover:bg-landing-fg/10 disabled:cursor-not-allowed disabled:opacity-40 sm:text-sm"
+        >
+          {isComparing ? "Remove from compare" : "+ Compare"}
+        </button>
+      ) : null}
     </aside>
   )
 }
