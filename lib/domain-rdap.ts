@@ -1,5 +1,11 @@
 import type { DomainStatus, TldOption } from "./mock-data"
-import { SUPPORTED_TLDS, slugifyName } from "./mock-data"
+import {
+  SUPPORTED_TLDS,
+  applyTldPreference,
+  orderTldOptions,
+  slugifyName,
+} from "./mock-data"
+import type { TldPreference } from "./search-params"
 
 const RDAP_TIMEOUT_MS = 5_000
 
@@ -64,25 +70,26 @@ export async function checkDomainViaRdap(
   }
 }
 
-export async function buildTldOptionsForSlug(slug: string): Promise<TldOption[]> {
+export async function buildTldOptionsForSlug(
+  slug: string,
+  tlds: TldPreference = "any"
+): Promise<TldOption[]> {
   const statuses = await Promise.all(
     SUPPORTED_TLDS.map(async (tld) => ({
-      tld,
+      tld: tld as string,
       status: await checkDomainViaRdap(slug, tld),
     }))
   )
 
-  return statuses
+  return orderTldOptions(statuses, tlds)
 }
 
-export async function buildDomainFieldsFromRdap(name: string) {
+export async function buildDomainFieldsFromRdap(
+  name: string,
+  tlds: TldPreference = "any"
+) {
   const slug = slugifyName(name)
-  const tldOptions = await buildTldOptionsForSlug(slug)
-  const comOption = tldOptions.find((option) => option.tld === ".com")
+  const tldOptions = await buildTldOptionsForSlug(slug, tlds)
 
-  return {
-    primaryDomain: `${slug}.com`,
-    domainStatus: comOption?.status ?? "unavailable",
-    tldOptions,
-  }
+  return applyTldPreference(slug, tldOptions, tlds)
 }
