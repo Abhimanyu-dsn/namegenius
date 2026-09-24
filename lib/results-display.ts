@@ -1,13 +1,31 @@
+import type { TldPreference } from "./search-params"
 import type { DomainStatus, NameSuggestion, TldOption } from "./mock-data"
 
-export function getCardDisplayDomain(suggestion: NameSuggestion): {
+export function isPreferredTld(tld: string, preference: TldPreference): boolean {
+  return preference !== "any" && preference.includes(tld)
+}
+
+export function getCardDisplayDomain(
+  suggestion: NameSuggestion,
+  preferredTlds: TldPreference = "any"
+): {
   slug: string
   tld: string
   domain: string
   status: DomainStatus
 } {
-  const slug = suggestion.primaryDomain.replace(/\.com$/, "")
-  const preferred =
+  const slug = suggestion.primaryDomain.replace(/\.[a-z0-9-]+$/i, "")
+  let preferred: TldOption | undefined
+  if (preferredTlds !== "any") {
+    preferred =
+      preferredTlds
+        .map((tld) => suggestion.tldOptions.find((o) => o.tld === tld))
+        .find((o) => o?.status === "available") ??
+      preferredTlds
+        .map((tld) => suggestion.tldOptions.find((o) => o.tld === tld))
+        .find(Boolean)
+  }
+  preferred ??=
     suggestion.tldOptions.find((option) => option.tld === ".com") ??
     suggestion.tldOptions[0]
 

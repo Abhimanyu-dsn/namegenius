@@ -3,18 +3,21 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import { ChevronDown, ChevronUp } from "lucide-react"
 
-import { getCardDisplayDomain } from "@/lib/results-display"
+import { getCardDisplayDomain, isPreferredTld } from "@/lib/results-display"
 import type { NameSuggestion } from "@/lib/mock-data"
+import type { TldPreference } from "@/lib/search-params"
 import { cn } from "@/lib/utils"
 
 export function ResultsNameList({
   suggestions,
   selectedId,
   onSelect,
+  preferredTlds = "any",
 }: {
   suggestions: NameSuggestion[]
   selectedId: string
   onSelect: (id: string) => void
+  preferredTlds?: TldPreference
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const itemRefs = useRef<Map<string, HTMLButtonElement>>(new Map())
@@ -102,7 +105,8 @@ export function ResultsNameList({
         style={{ scrollSnapType: "y mandatory" }}
       >
         {suggestions.map((suggestion, index) => {
-          const display = getCardDisplayDomain(suggestion)
+          const display = getCardDisplayDomain(suggestion, preferredTlds)
+          const isPreferred = isPreferredTld(display.tld, preferredTlds)
           const isSelected = suggestion.id === selectedId
 
           return (
@@ -139,8 +143,13 @@ export function ResultsNameList({
               >
                 {display.slug}
               </span>
-              <span className="font-mono text-xs text-landing-muted sm:text-sm">
-                {display.tld}
+              <span className="flex flex-col items-end font-mono text-xs text-landing-muted sm:text-sm">
+                <span className="whitespace-nowrap">{display.tld}</span>
+                {isPreferred ? (
+                  <span className="mt-0.5 whitespace-nowrap text-[11px] uppercase tracking-[0.12em] text-landing-accent">
+                    Preferred
+                  </span>
+                ) : null}
               </span>
             </button>
           )
