@@ -5,7 +5,7 @@ import {
   GeminiGenerationError,
   GeminiQuotaError,
 } from "./gemini-names"
-import type { NameSuggestion } from "./mock-data"
+import { sortByTldPreference, type NameSuggestion } from "./mock-data"
 import type { TldPreference } from "./search-params"
 
 export type SuggestionsErrorCode = "QUOTA_EXHAUSTED" | "GENERATION_FAILED"
@@ -26,10 +26,10 @@ export async function generateLiveSuggestions(
 
     const suggestions: NameSuggestion[] = await Promise.all(
       candidates.map(async (candidate, index) => {
-        const domainFields = await buildDomainFieldsFromRdap(candidate.name)
+        const domainFields = await buildDomainFieldsFromRdap(candidate.name, tlds)
 
         return {
-          id: `${seed}-${domainFields.primaryDomain.replace(".com", "")}-${index}`,
+          id: `${seed}-${domainFields.primaryDomain.replace(/\.[a-z]+$/, "")}-${index}`,
           name: candidate.name,
           matchContext: candidate.matchContext,
           ...domainFields,
@@ -40,7 +40,9 @@ export async function generateLiveSuggestions(
 
     const withScores = applyBrandMatch(suggestions, inputs, seed)
 
-    return { suggestions: withScores }
+    return {
+      suggestions: tlds === "any" ? withScores : sortByTldPreference(withScores),
+    }
   } catch (error) {
     if (error instanceof GeminiQuotaError) {
       return {

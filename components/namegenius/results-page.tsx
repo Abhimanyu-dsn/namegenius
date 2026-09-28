@@ -294,6 +294,7 @@ export function ResultsPage() {
                   suggestions={displaySuggestions}
                   selectedId={activeSelectedId}
                   onSelect={setSelectedId}
+                  preferredTlds={search.tlds}
                 />
               )}
             </div>
@@ -330,6 +331,7 @@ export function ResultsPage() {
                   if (selectedSuggestion) toggleCompare(selectedSuggestion)
                 }}
                 canAddToCompare={canAddToCompare}
+                preferredTlds={search.tlds}
               />
             </section>
           ) : null}
@@ -355,6 +357,7 @@ export function ResultsPage() {
                 if (selectedSuggestion) toggleCompare(selectedSuggestion)
               }}
               canAddToCompare={canAddToCompare}
+              preferredTlds={search.tlds}
             />
           </div>
         )}

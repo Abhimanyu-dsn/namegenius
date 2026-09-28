@@ -162,7 +162,8 @@ const suggestionPools = [
 
 export function generateSuggestions(
   inputs: BrandInputs = defaultFormValues,
-  seed = 0
+  seed = 0,
+  tlds: "any" | string[] = "any"
 ): NameSuggestion[] {
   const pool = suggestionPools[seed % suggestionPools.length].slice(
     0,
@@ -173,12 +174,87 @@ export function generateSuggestions(
     id: `${seed}-${suggestion.id}-${index}`,
   }))
 
-  return applyBrandMatch(withIds, inputs, seed).map((suggestion) =>
+  const scored = applyBrandMatch(withIds, inputs, seed).map((suggestion) =>
     suggestion.name === "BrandForge" ? { ...suggestion, brandMatch: 92 } : suggestion
+  )
+
+  if (tlds === "any") {
+    return scored
+  }
+
+  // Mock statuses only mark .com available; treat preferred TLDs the same way.
+  return sortByTldPreference(
+    scored.map((suggestion) => ({
+      ...suggestion,
+      ...applyTldPreference(
+        slugifyName(suggestion.name),
+        suggestion.tldOptions.map((option) => ({
+          ...option,
+          status:
+            option.tld === ".com"
+              ? option.status
+              : suggestion.domainStatus === "available" && tlds.includes(option.tld)
+                ? ("available" as DomainStatus)
+                : option.status,
+        })),
+        tlds
+      ),
+    }))
   )
 }
 
 export const mockSuggestions = generateSuggestions()
+
+export function orderTldOptions(
+  tldOptions: TldOption[],
+  tlds: "any" | string[]
+): TldOption[] {
+  if (tlds === "any") {
+    return tldOptions
+  }
+  const rank = (tld: string) => {
+    const index = tlds.indexOf(tld)
+    return index === -1 ? tlds.length : index
+  }
+  return [...tldOptions].sort((a, b) => rank(a.tld) - rank(b.tld))
+}
+
+export function applyTldPreference(
+  slug: string,
+  tldOptions: TldOption[],
+  tlds: "any" | string[]
+) {
+  const ordered = orderTldOptions(tldOptions, tlds)
+  const preferred =
+    tlds === "any" ? [] : ordered.filter((option) => tlds.includes(option.tld))
+  const primary =
+    preferred.find((option) => option.status === "available") ??
+    preferred[0] ??
+    ordered.find((option) => option.tld === ".com")
+
+  return {
+    primaryDomain: `${slug}${primary?.tld ?? ".com"}`,
+    domainStatus: primary?.status ?? ("unavailable" as DomainStatus),
+    tldOptions: ordered,
+  }
+}
+
+// Stable sort: primary domain available first, then higher brandMatch.
+export function sortByTldPreference(
+  suggestions: NameSuggestion[]
+): NameSuggestion[] {
+  return suggestions
+    .map((suggestion, index) => ({ suggestion, index }))
+    .sort((a, b) => {
+      const availability =
+        Number(b.suggestion.domainStatus === "available") -
+        Number(a.suggestion.domainStatus === "available")
+      if (availability !== 0) return availability
+      const match = b.suggestion.brandMatch - a.suggestion.brandMatch
+      return match !== 0 ? match : a.index - b.index
+    })
+    .map(({ suggestion }) => suggestion)
+}
 
 export function filterTldOptions(
   tldOptions: TldOption[],

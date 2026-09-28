@@ -8,8 +8,10 @@ import {
   formatTldStatusLabel,
   getCardDisplayDomain,
   getTldStatusDotClass,
+  isPreferredTld,
 } from "@/lib/results-display"
 import type { NameSuggestion, TldOption } from "@/lib/mock-data"
+import type { TldPreference } from "@/lib/search-params"
 import { cn } from "@/lib/utils"
 
 import { BrandMatchRing } from "./brand-match-ring"
@@ -24,6 +26,7 @@ export function ResultsDetailPanel({
   isComparing = false,
   onToggleCompare,
   canAddToCompare = true,
+  preferredTlds = "any",
 }: {
   suggestion: NameSuggestion | null
   tldOptions: TldOption[]
@@ -34,15 +37,19 @@ export function ResultsDetailPanel({
   isComparing?: boolean
   onToggleCompare?: () => void
   canAddToCompare?: boolean
+  preferredTlds?: TldPreference
 }) {
   if (!suggestion) {
     return null
   }
 
-  const display = getCardDisplayDomain({
-    ...suggestion,
-    tldOptions,
-  })
+  const display = getCardDisplayDomain(
+    {
+      ...suggestion,
+      tldOptions,
+    },
+    preferredTlds
+  )
   const checklist = buildChecklist(
     suggestion,
     display.tld,
@@ -131,7 +138,14 @@ export function ResultsDetailPanel({
               key={option.tld}
               className="flex items-center justify-between font-mono text-xs uppercase tracking-[0.1em]"
             >
-              <span>{option.tld}</span>
+              <span className="inline-flex min-w-0 items-center gap-2">
+                <span>{option.tld}</span>
+                {isPreferredTld(option.tld, preferredTlds) ? (
+                  <span className="text-[11px] tracking-[0.12em] text-landing-accent">
+                    Preferred
+                  </span>
+                ) : null}
+              </span>
               <span className="inline-flex items-center gap-2 text-landing-muted">
                 <span
                   className={cn(

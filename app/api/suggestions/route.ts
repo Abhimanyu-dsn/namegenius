@@ -15,12 +15,9 @@ function parseRequestTlds(value: unknown): TldPreference {
   }
 
   if (Array.isArray(value)) {
-    const selected = value
-      .filter((item): item is string => typeof item === "string")
-      .map((item) => item.trim())
-      .filter(Boolean)
-
-    return selected.length > 0 ? selected : "any"
+    return parseTldPreference(
+      value.filter((item): item is string => typeof item === "string").join(",")
+    )
   }
 
   if (typeof value === "string") {
@@ -66,7 +63,7 @@ export async function POST(request: Request) {
   if (!apiKey) {
     const brandInputs = toBrandInputs(params)
     return NextResponse.json({
-      suggestions: generateSuggestions(brandInputs, params.seed),
+      suggestions: generateSuggestions(brandInputs, params.seed, params.tlds),
     })
   }
 

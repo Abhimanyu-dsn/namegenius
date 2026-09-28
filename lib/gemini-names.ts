@@ -132,6 +132,10 @@ function buildPrompt(
   }
   if (tlds !== "any") {
     parts.push(`Preferred TLDs: ${formatTldPreferenceLabel(tlds)}`)
+    parts.push(
+      "Names must be optimized for these TLDs: keep them short (ideally 4-10 characters), easy to spell, and make each read well as a full domain such as name" +
+        `${tlds[0]}. Favor names likely to be unregistered on these TLDs.`
+    )
   }
 
   parts.push(
